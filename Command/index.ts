@@ -13,6 +13,9 @@ import CommandOptions from "./CommandOptions";
 import CustomClient from "../CustomClient";
 
 export default abstract class Command {
+  /** Defines after which commands this command will be initialized. */
+  dependencies: string[] = [];
+
   /** Identifier and trigger of command */
   id: string;
   /** Command name (console logger name) */
@@ -48,9 +51,7 @@ export default abstract class Command {
     this.type = options.type;
 
     // Command Builders
-    this.slashCommandInfo = new SlashCommandBuilder()
-      .setName(this.id)
-      .setDescription(this.name);
+    this.slashCommandInfo = new SlashCommandBuilder().setName(this.id).setDescription(this.name);
 
     this.prefixCommandInfo = new PrefixCommandBuilder().addAlias(this.id);
 
@@ -67,35 +68,21 @@ export default abstract class Command {
     this.slashCommandInfo.setDescription(description);
   }
 
-  runSlash?(
-    interaction: CommandInteraction,
-    client: CustomClient
-  ): Promise<any>;
+  runSlash?(interaction: CommandInteraction, client: CustomClient): Promise<any>;
 
-  runPrefix?(
-    message: Message,
-    args: string[],
-    client: CustomClient
-  ): Promise<any>;
+  runPrefix?(message: Message, args: string[], client: CustomClient): Promise<any>;
 
   /**
    * @param message WARNING! This parameter could be interaction or message.
    * Try to use only methods, which are in both classes.
    */
-  run?(
-    message: Message | CommandInteraction,
-    args: string[],
-    client: CustomClient
-  ): Promise<any>;
+  run?(message: Message | CommandInteraction, args: string[], client: CustomClient): Promise<any>;
 
   async onInit(client: CustomClient): Promise<void> {}
 
   async shutdown(): Promise<void> {}
 
-  async autocomplete(
-    interaction: AutocompleteInteraction,
-    client: CustomClient
-  ): Promise<void> {}
+  async autocomplete(interaction: AutocompleteInteraction, client: CustomClient): Promise<void> {}
 
   // Config
 
@@ -116,10 +103,7 @@ export default abstract class Command {
     }
   }
 
-  writeConfig<config = any>(
-    data: config,
-    configName = this.configName
-  ): config {
+  writeConfig<config = any>(data: config, configName = this.configName): config {
     const dir = this.getCfgDir();
     const cfg = path.join(dir, configName, ".json");
     if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
@@ -134,8 +118,7 @@ export default abstract class Command {
     return true;
   }
 
-  private getCfgDir = () =>
-    path.join(process.cwd(), "configs/commands", this.configFolder);
+  private getCfgDir = () => path.join(process.cwd(), "configs/commands", this.configFolder);
 
   // Data
 
@@ -220,13 +203,8 @@ export default abstract class Command {
     return args;
   }
 
-  static getCommandByClass<CommandType = Command>(
-    client: CustomClient,
-    Class: Command
-  ): CommandType {
+  static getCommandByClass<CommandType = Command>(client: CustomClient, Class: Command): CommandType {
     const commands = client.prefCmd.concat(client.interCmd);
-    return commands.find(
-      (v) => v.constructor.name == Class.constructor.name
-    ) as CommandType;
+    return commands.find((v) => v.constructor.name == Class.constructor.name) as CommandType;
   }
 }
